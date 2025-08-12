@@ -38,6 +38,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <!-- Resource hints for faster CSV fetching -->
+    <link rel="preconnect" href="https://docs.google.com" crossorigin>
+    <link rel="dns-prefetch" href="//docs.google.com">
 
     <title>Cardápio Sheets</title>
 
@@ -2997,19 +3000,30 @@
                 applyConfiguration();
                 updateProgress(20);
 
-                // Load categories data
+                // Start remaining CSV fetches concurrently (preserve processing order below)
                 infoLog('Loading categories data...');
-                categoriesData = await loadCSVData(CATEGORIES_CSV_URL);
+                const categoriesPromise = loadCSVData(CATEGORIES_CSV_URL);
+
+                infoLog('Loading menu items data...');
+                const menuItemsPromise = loadCSVData(MENU_CSV_URL);
+
+                infoLog('Loading hours data...');
+                const hoursPromise = loadCSVData(HOURS_CSV_URL);
+
+                debugLog('🏠️ Loading neighborhoods data...');
+                const neighborhoodsPromise = loadCSVData(NEIGHBORHOODS_CSV_URL);
+
+                debugLog('🎟️ Loading coupons data...');
+                const couponsPromise = loadCSVData(COUPONS_CSV_URL);
+
+                // Await and process results in the original sequence
+                categoriesData = await categoriesPromise;
                 updateProgress(40);
 
-                // Load menu items data
-                infoLog('Loading menu items data...');
-                const menuItems = await loadCSVData(MENU_CSV_URL);
+                const menuItems = await menuItemsPromise;
                 updateProgress(65);
 
-                // Load hours data
-                infoLog('Loading hours data...');
-                hoursData = await loadCSVData(HOURS_CSV_URL);
+                hoursData = await hoursPromise;
                 debugLog('Hours data loaded:', hoursData.length, 'entries');
                 
                 if (hoursData.length > 0) {
@@ -3026,10 +3040,9 @@
                 }
                 updateProgress(80);
 
-                // Load neighborhoods data for delivery fees
-                debugLog('🏠️ Loading neighborhoods data...');
+                // Load neighborhoods data (optional)
                 try {
-                    neighborhoodsData = await loadCSVData(NEIGHBORHOODS_CSV_URL);
+                    neighborhoodsData = await neighborhoodsPromise;
                     // Process neighborhoods data - mapear para formato consistente
                     neighborhoodsData = neighborhoodsData.map(row => ({
                         // Tentar várias possibilidades de nomes de colunas
@@ -3049,10 +3062,9 @@
                     neighborhoodsData = []; // Fallback to empty array
                 }
                 
-                // Load coupons data
-                debugLog('🎟️ Loading coupons data...');
+                // Load coupons data (optional)
                 try {
-                    couponsData = await loadCSVData(COUPONS_CSV_URL);
+                    couponsData = await couponsPromise;
                     infoLog(`✅ Coupons loaded:`, couponsData.length, 'items');
                 } catch (error) {
                     errorLog('❌ Error loading coupons:', error.message);
