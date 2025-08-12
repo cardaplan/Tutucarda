@@ -5859,6 +5859,125 @@
             });
         }
 
+        // ===== Toggle between select and free text for CEP/Bairro/Cidade =====
+        window.useFormSelects = true; // default: keep current select behavior
+
+        function replaceFieldPreserveClass(oldEl, newEl) {
+            if (!oldEl || !newEl) return null;
+            if (oldEl.className) newEl.className = oldEl.className;
+            oldEl.replaceWith(newEl);
+            return newEl;
+        }
+
+        function createCepSelect() {
+            const el = document.createElement('select');
+            el.id = 'cep';
+            el.setAttribute('onchange', "clearFieldError('cep'); fetchAddress(); updateContinueButton();");
+            el.setAttribute('onblur', "updateContinueButton();");
+            return el;
+        }
+
+        function createCepInput() {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.id = 'cep';
+            el.placeholder = 'Digite o CEP';
+            el.setAttribute('onchange', "clearFieldError('cep'); if(this.value && this.value.toString().replace(/\\D/g,'').length===8){ fetchAddress(); } updateContinueButton();");
+            el.setAttribute('onblur', "updateContinueButton();");
+            return el;
+        }
+
+        function createNeighborhoodSelect() {
+            const el = document.createElement('select');
+            el.id = 'neighborhood';
+            el.setAttribute('onchange', "updateAddressData(); clearFieldError('neighborhood'); buscarTaxaPorBairroRedundante(this.value, true);");
+            return el;
+        }
+
+        function createNeighborhoodInput() {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.id = 'neighborhood';
+            el.placeholder = 'Digite o bairro';
+            el.setAttribute('onchange', "updateAddressData(); clearFieldError('neighborhood'); buscarTaxaPorBairroRedundante(this.value, true);");
+            return el;
+        }
+
+        function createCitySelect() {
+            const el = document.createElement('select');
+            el.id = 'city';
+            el.setAttribute('onchange', "updateAddressData(); clearFieldError('city');");
+            return el;
+        }
+
+        function createCityInput() {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.id = 'city';
+            el.placeholder = 'Digite a cidade';
+            el.setAttribute('onchange', "updateAddressData(); clearFieldError('city');");
+            return el;
+        }
+
+        window.toggleFormSelectMode = function(useSelects) {
+            try {
+                window.useFormSelects = !!useSelects;
+
+                // Capture current values
+                const oldCepEl = document.getElementById('cep');
+                const oldNeighborhoodEl = document.getElementById('neighborhood');
+                const oldCityEl = document.getElementById('city');
+                const cepValue = oldCepEl ? oldCepEl.value : '';
+                const neighborhoodValue = oldNeighborhoodEl ? oldNeighborhoodEl.value : '';
+                const cityValue = oldCityEl ? oldCityEl.value : '';
+
+                // CEP
+                if (useSelects) {
+                    const newEl = createCepSelect();
+                    replaceFieldPreserveClass(oldCepEl, newEl);
+                } else {
+                    const newEl = createCepInput();
+                    replaceFieldPreserveClass(oldCepEl, newEl);
+                }
+
+                // Neighborhood
+                if (useSelects) {
+                    const newEl = createNeighborhoodSelect();
+                    replaceFieldPreserveClass(oldNeighborhoodEl, newEl);
+                } else {
+                    const newEl = createNeighborhoodInput();
+                    replaceFieldPreserveClass(oldNeighborhoodEl, newEl);
+                }
+
+                // City
+                if (useSelects) {
+                    const newEl = createCitySelect();
+                    replaceFieldPreserveClass(oldCityEl, newEl);
+                } else {
+                    const newEl = createCityInput();
+                    replaceFieldPreserveClass(oldCityEl, newEl);
+                }
+
+                // If selects are active, repopulate options
+                if (useSelects && typeof setupAddressSelects === 'function') {
+                    setupAddressSelects();
+                }
+
+                // Restore previous values
+                const newCepEl = document.getElementById('cep');
+                const newNeighborhoodEl = document.getElementById('neighborhood');
+                const newCityEl = document.getElementById('city');
+                if (newCepEl && typeof cepValue === 'string') newCepEl.value = cepValue;
+                if (newNeighborhoodEl && typeof neighborhoodValue === 'string') newNeighborhoodEl.value = neighborhoodValue;
+                if (newCityEl && typeof cityValue === 'string') newCityEl.value = cityValue;
+
+                // Trigger re-validation and UI updates
+                if (typeof updateContinueButton === 'function') updateContinueButton();
+            } catch (e) {
+                errorLog('Erro ao alternar modo de formulário (select vs input):', e);
+            }
+        };
+
         // Show all delivery options (only enabled ones from configuration)
         function showAllDeliveryOptions() {
             const deliveryOptions = document.getElementById('delivery-options');
