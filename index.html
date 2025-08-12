@@ -5872,7 +5872,7 @@
         function createCepSelect() {
             const el = document.createElement('select');
             el.id = 'cep';
-            el.setAttribute('onchange', "clearFieldError('cep'); fetchAddress(); updateContinueButton();");
+            el.setAttribute('onchange', "handleCepInput(); clearFieldError('cep'); updateContinueButton();");
             el.setAttribute('onblur', "updateContinueButton();");
             return el;
         }
@@ -5882,7 +5882,9 @@
             el.type = 'text';
             el.id = 'cep';
             el.placeholder = 'Digite o CEP';
-            el.setAttribute('onchange', "clearFieldError('cep'); if(this.value && this.value.toString().replace(/\\D/g,'').length===8){ fetchAddress(); } updateContinueButton();");
+            // Trigger address fetch logic as the user types and on change
+            el.setAttribute('oninput', "handleCepInput();");
+            el.setAttribute('onchange', "handleCepInput(); clearFieldError('cep'); updateContinueButton();");
             el.setAttribute('onblur', "updateContinueButton();");
             return el;
         }
@@ -5899,6 +5901,7 @@
             el.type = 'text';
             el.id = 'neighborhood';
             el.placeholder = 'Digite o bairro';
+            el.setAttribute('oninput', "updateAddressData();");
             el.setAttribute('onchange', "updateAddressData(); clearFieldError('neighborhood'); buscarTaxaPorBairroRedundante(this.value, true);");
             return el;
         }
@@ -5915,6 +5918,7 @@
             el.type = 'text';
             el.id = 'city';
             el.placeholder = 'Digite a cidade';
+            el.setAttribute('oninput', "updateAddressData();");
             el.setAttribute('onchange', "updateAddressData(); clearFieldError('city');");
             return el;
         }
