@@ -52,6 +52,12 @@
 
     <script src="config.js"></script>
     <script>
+        // Exemplo de uso do modo do formulário (selects vs digitação livre)
+        // Habilitar selects (comportamento padrão):
+        // toggleFormSelectMode(true);
+        // Desabilitar selects (digitação livre):
+        // toggleFormSelectMode(false);
+
         // Teste de carregamento do sistema localStorage
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -5531,6 +5537,13 @@
                     
                     // Popular selects de CEP, Bairro e Cidade
                     try { setupAddressSelects(); } catch (e) { console.error('Erro setupAddressSelects', e); }
+
+                    // Aplicar modo atual (selects ou digitação livre)
+                    try {
+                        if (window.useFormSelects === false && typeof toggleFormSelectMode === 'function') {
+                            toggleFormSelectMode(false);
+                        }
+                    } catch (e) { console.error('Erro toggleFormSelectMode', e); }
                     
                     // Foco automático no campo de CEP após renderização
                     setTimeout(() => {
